@@ -6,7 +6,7 @@ from Components.ActionMap import ActionMap
 from Components.ScrollLabel import ScrollLabel
 from Components.Sources.StaticText import StaticText
 
-from Screens.Screen import Screen
+from Screens.Screen import Screen, ScreenSummary
 
 
 class AboutBoxBranding(Screen):
@@ -35,6 +35,16 @@ class AboutBoxBranding(Screen):
 	def pageDown(self):
 		self["AboutScrollLabel"].pageDown()
 
+	def createSummary(self):
+		return AboutBoxBrandingSummary
+
+
+class AboutBoxBrandingSummary(ScreenSummary):
+	def __init__(self, session, parent):
+		Screen.__init__(self, session, parent=parent)
+		self["AboutText"] = StaticText(parent.title)
+		self.skinName = "AboutSummary"
+
 
 def getBoxbranding():
 	import boxbranding
@@ -43,7 +53,7 @@ def getBoxbranding():
 	for m in sorted(boxbranding.__dict__.keys()):
 		if callable(getattr(boxbranding, m)):
 			v = getattr(boxbranding, m)()
-			for x in ("http://", "https://"): # Trim URLs to domain only
+			for x in ("http://", "https://"):  # Trim URLs to domain only
 				if v.startswith(x):
 					v = v.split(x)[1].split('/')[0] + " [...]"
 					break

@@ -7,19 +7,16 @@ from Plugins.Plugin import PluginDescriptor
 from Components.Console import Console
 from Components.Button import Button
 from Components.ActionMap import ActionMap
-from Components.ConfigList import ConfigList
 from Components.config import config, configfile, ConfigSubsection, getConfigListEntry, ConfigSelection, ConfigSlider
 from Components.ConfigList import ConfigListScreen
 from enigma import iPlayableService, eServiceCenter, eTimer, eActionMap, eDBoxLCD
 from Components.ServiceEventTracker import ServiceEventTracker
-from Components.ServiceList import ServiceList
 from Screens.InfoBar import InfoBar
 from time import localtime, time
-from Tools.Directories import fileExists
 import Components.RecordingConfig
 from Tools.HardwareInfo import HardwareInfo
 
-from boxbranding import getImageDistro, getBoxType
+from boxbranding import getImageDistro
 
 import Screens.Standby
 
@@ -33,7 +30,7 @@ config.plugins.VFD_ini.ClockLevel2 = ConfigSlider(default=4, limits=(1, 10))
 
 MyRecLed = False
 use_oled = False
-if HardwareInfo().get_device_model() in ("sf8008", "sf8008m", "sf8008opt", "gbmv200", "viper4k"):
+if HardwareInfo().get_device_model() in ("sf8008", "sf8008m", "sf8008opt", "gbmv200", "viper4k", "sfx6008", "sx88v2"):
 	use_oled = True
 
 
@@ -342,7 +339,7 @@ def main(menuid):
 			if menuid == "display":
 				return [(_("LED Display Setup"), startVFD, "VFD_INI", None)]
 			else:
-				return[]
+				return []
 		else:
 			if menuid != "system":
 				return []
@@ -388,4 +385,4 @@ def sessionstart(reason, **kwargs):
 
 def Plugins(**kwargs):
 	return [PluginDescriptor(where=[PluginDescriptor.WHERE_AUTOSTART, PluginDescriptor.WHERE_SESSIONSTART], fnc=sessionstart),
-		PluginDescriptor(name="LED Display Setup", description="Change LED display settings", where=PluginDescriptor.WHERE_MENU, fnc=main)]
+		PluginDescriptor(name="LED Display Setup", description=_("Change LED display settings"), where=PluginDescriptor.WHERE_MENU, fnc=main)]

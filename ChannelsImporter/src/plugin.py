@@ -8,7 +8,7 @@ from Components.Sources.StaticText import StaticText
 from Components.config import config, configfile, ConfigSubsection, ConfigIP, ConfigText, ConfigInteger, ConfigYesNo, ConfigSelection, ConfigClock, NoSave, ConfigNumber
 from Screens.Setup import Setup
 from Components.SystemInfo import SystemInfo
-from Screens.MessageBox import MessageBox # for are you sure questions after config changes
+from Screens.MessageBox import MessageBox  # for are you sure questions after config changes
 
 from .ChannelsImporter import ChannelsImporter
 
@@ -28,7 +28,7 @@ config.plugins.ChannelsImporter.enableSchedule = ConfigYesNo(False)
 config.plugins.ChannelsImporter.extensions = ConfigYesNo(default=False)
 config.plugins.ChannelsImporter.setupFallback = ConfigYesNo(default=False)
 config.plugins.ChannelsImporter.scheduleRepeatInterval = ConfigSelection(default="daily", choices=[("2", _("Every 2 minutes (for testing)")), ("5", _("Every 5 minutes (for testing)")), ("60", _("Every hour")), ("120", _("Every 2 hours")), ("180", _("Every 3 hours")), ("360", _("Every 6 hours")), ("720", _("Every 12 hours")), ("daily", _("Daily"))])
-config.plugins.ChannelsImporter.scheduletime = ConfigClock(default=0) # 1:00
+config.plugins.ChannelsImporter.scheduletime = ConfigClock(default=0)  # 1:00
 config.plugins.ChannelsImporter.errorMessages = ConfigYesNo(False)
 
 
@@ -57,24 +57,14 @@ class ChannelsImporterScreen(Setup):
 			<widget name="description" position="50,385" size="500,80" font="Regular;18" halign="center" valign="top" transparent="0" zPosition="1"/>
 		</screen>"""
 
-	def __init__(self, session, setup, plugin=None, menu_path=None, PluginLanguageDomain=None):
-		try:
-			Setup.__init__(self, session, setup, plugin, menu_path, PluginLanguageDomain)
-		except TypeError:
-			Setup.__init__(self, session, setup, plugin)
+	def __init__(self, session, setup, plugin, PluginLanguageDomain):
+		Setup.__init__(self, session, setup, plugin, PluginLanguageDomain)
 
-		self["actions2"] = ActionMap(["SetupActions", "ColorActions", "MenuActions"],
+		self["actions2"] = ActionMap(["ColorActions"],
 		{
-			"ok": self.keySave,
-			"cancel": self.keyCancel,
-			"menu": self.keyCancel,
-			"red": self.keyCancel,
-			"green": self.keySave,
 			"yellow": self.keyGo,
 		}, -2)
 
-		self["key_red"] = StaticText(_("Exit"))
-		self["key_green"] = StaticText(_("Save"))
 		self["key_yellow"] = StaticText(_("Import"))
 
 	def keySave(self):
@@ -93,18 +83,6 @@ class ChannelsImporterScreen(Setup):
 			config.usage.remote_fallback.value = "http://%d.%d.%d.%d:8001" % (config.plugins.ChannelsImporter.ip.value[0], config.plugins.ChannelsImporter.ip.value[1], config.plugins.ChannelsImporter.ip.value[2], config.plugins.ChannelsImporter.ip.value[3])
 			config.usage.remote_fallback.save()
 		configfile.save()
-
-	def keyCancel(self):
-		if self["config"].isChanged():
-			self.session.openWithCallback(self.cancelCallback, MessageBox, _("Really close without saving settings?"))
-		else:
-			self.cancelCallback(True)
-
-	def cancelCallback(self, answer):
-		if answer:
-			for x in self["config"].list:
-				x[1].cancel()
-			self.close(False)
 
 	def startImporter(self):
 		self.session.openWithCallback(self.startImporterCallback, ChannelsImporter)
@@ -125,8 +103,7 @@ def ChannelsImporterStart(menuid, **kwargs):
 
 
 def ChannelsImporterMain(session, **kwargs):
-	menu_path = _("Main menu") + ' / ' + _("Setup") + ' / ' + _('Service searching')
-	session.open(ChannelsImporterScreen, 'channelsimporter', 'SystemPlugins/ChannelsImporter', menu_path, PluginLanguageDomain)
+	session.open(ChannelsImporterScreen, 'channelsimporter', 'SystemPlugins/ChannelsImporter', PluginLanguageDomain)
 
 
 def Plugins(**kwargs):

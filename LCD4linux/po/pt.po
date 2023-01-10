@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LCD4linux\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-10 21:04+0200\n"
+"POT-Creation-Date: 2022-11-03 07:54+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Mr.Servo <mrservo via GitHub.com>\n"
 "Language-Team: BH Team\n"
@@ -195,6 +195,9 @@ msgstr "- Largura HTTP"
 
 msgid "- Infolines"
 msgstr "- Linhas de Informação"
+
+msgid "- Trendarrows"
+msgstr "- Setas de Tendência"
 
 msgid "- LCD 1 Background Color"
 msgstr "- Cor de Fundo LCD 1"
@@ -997,9 +1000,6 @@ msgstr "Distância apenas"
 msgid "Distance+Illumination"
 msgstr "Distância+Iluminação"
 
-msgid "Illumination+Moonphase"
-msgstr "Iluminação+Fase da Lua"
-
 msgid "Distance+Moonphase"
 msgstr "Distância + Fases da Lua"
 
@@ -1012,9 +1012,6 @@ msgstr "Descarregar Arquivo de Depuração"
 msgid "E"
 msgstr "E"
 
-msgid "Element"
-msgstr "Elemento"
-
 msgid "ENE"
 msgstr "ENE"
 
@@ -1023,6 +1020,9 @@ msgstr "EPG"
 
 msgid "ESE"
 msgstr "ESE"
+
+msgid "Element"
+msgstr "Elemento"
 
 msgid "Event Icon Bar"
 msgstr "Barra de Icon do Evento"
@@ -1042,11 +1042,11 @@ msgstr "Descrição Extendida"
 msgid "External IP Address"
 msgstr "Endereço IP Externo"
 
-msgid "Filename"
-msgstr "Nome do ficheiro"
-
 msgid "Fastmode (2s)"
 msgstr "Modo Rápido (2s)"
+
+msgid "Filename"
+msgstr "Nome do ficheiro"
 
 msgid "First Quarter"
 msgstr "Quarto Crescente"
@@ -1151,9 +1151,6 @@ msgstr "Gradiente"
 msgid "HDD"
 msgstr "HDD"
 
-msgid "Illumination only"
-msgstr "Iluminação apenas"
-
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -1165,6 +1162,12 @@ msgstr "Segurança de IP não suportada pelo dispositivo"
 
 msgid "Idle"
 msgstr "Idle"
+
+msgid "Illumination only"
+msgstr "Iluminação apenas"
+
+msgid "Illumination+Moonphase"
+msgstr "Iluminação+Fase da Lua"
 
 msgid "Indoor"
 msgstr "Dentro de Casa"
@@ -1374,9 +1377,6 @@ msgstr "MJPEG Stream LCD 3 Brilho Virtual"
 msgid "MJPEG Stream LCD 3 enable"
 msgstr "Activar Stream MJPEG LCD 3"
 
-msgid "Moonphase only"
-msgstr "Fase da lua apenas"
-
 msgid "MSN"
 msgstr "MSN"
 
@@ -1479,6 +1479,9 @@ msgstr "Estação Metereológica do Tempo"
 msgid "Mini-EPG"
 msgstr "Mini-EPG"
 
+msgid "Mode"
+msgstr "Modo"
+
 msgid "Module 1"
 msgstr "Módulo 1"
 
@@ -1548,9 +1551,6 @@ msgstr "Módulo 5-6"
 msgid "Module 6"
 msgstr "Módulo 6"
 
-msgid "Mode"
-msgstr "Modo"
-
 msgid "Mon"
 msgstr "Seg"
 
@@ -1565,6 +1565,9 @@ msgstr "Percurso Icons Lunares [OK]>"
 
 msgid "Moonphase"
 msgstr "Fases da Lua"
+
+msgid "Moonphase only"
+msgstr "Fase da lua apenas"
 
 msgid "MusicCast"
 msgstr "MusicCast"
@@ -2308,6 +2311,9 @@ msgstr "Cor de Alta Temperatura do Tempo"
 msgid "Weather Lines"
 msgstr "Linhas do Tempo"
 
+msgid "Weather Trendarrows"
+msgstr "Tempo Setas de Tendência"
+
 msgid "Weather Low Temperature Color"
 msgstr "Cor de Baixa Temperatura do Tempo"
 
@@ -2317,11 +2323,11 @@ msgstr "Possibilidade de Chuva no Tempo"
 msgid "Weather Transparency"
 msgstr "Transparências do Tempo"
 
-msgid "Weather Wind speed unit"
-msgstr "Unidade de Velocidade do Viento no Tempo"
-
 msgid "Weather Wind Info Lines"
 msgstr "Linhas de informação do vento do tempo"
+
+msgid "Weather Wind speed unit"
+msgstr "Unidade de Velocidade do Viento no Tempo"
 
 msgid "Weather-Icon Zoom"
 msgstr "Zoom de Icons do Tempo"

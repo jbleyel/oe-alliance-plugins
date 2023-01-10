@@ -109,10 +109,10 @@ class MPanelList(MenuList):
 
 
 def getShortName(name, serviceref):
-	if serviceref.flags & eServiceReference.mustDescent: #Directory
+	if serviceref.flags & eServiceReference.mustDescent:  # Directory
 		pathName = serviceref.getPath()
 		p = os.path.split(pathName)
-		if not p[1]: #if path ends in '/', p is blank.
+		if not p[1]:  # if path ends in '/', p is blank.
 			p = os.path.split(p[0])
 		return p[1].upper()
 	else:
@@ -861,7 +861,7 @@ class OpenUg(Screen):
 			lbl.visible = True
 		self.moveToCharTimer = eTimer()
 		self.moveToCharTimer.callback.append(self._moveToChrStr)
-		self.moveToCharTimer.start(1000, True) #time to wait for next key press to decide which letter to use...
+		self.moveToCharTimer.start(1000, True)  # time to wait for next key press to decide which letter to use...
 
 	def moveToString(self, char, lbl=None):
 		self._char = self._char + char.upper()
@@ -871,7 +871,7 @@ class OpenUg(Screen):
 			lbl.visible = True
 		self.moveToCharTimer = eTimer()
 		self.moveToCharTimer.callback.append(self._moveToChrStr)
-		self.moveToCharTimer.start(1000, True) #time to wait for next key press to decide which letter to use...
+		self.moveToCharTimer.start(1000, True)  # time to wait for next key press to decide which letter to use...
 
 	def _moveToChrStr(self):
 		currentIndex = self["list"].getSelectionIndex()
@@ -935,10 +935,10 @@ class OpenUg(Screen):
 
 	def getThumbnailName(self, x):
 		if self.choice == 'rtl':
-			if x[self.UG_ICON]:
-				return ""
-			else:
-				return ""
+			#if x[self.UG_ICON]:
+			#	return ""
+			#else:
+			return ""
 		return str(x[self.UG_STREAMURL]) + str(x[self.UG_ICONTYPE])
 
 	def updateMenu(self):
@@ -1219,7 +1219,7 @@ class OpenUg(Screen):
 			self.clearList()
 			self.level = self.UG_LEVEL_SERIE
 			if self.choice == 'rtl':
-				self.getRTLSerie(self.mediaList, "search.php?q=*" + callback + "*")
+				self.getRTLSerie(self.mediaList, "search.php?q=*" + callback + "*", "")  # FIME Skey variable
 				self.updateMenu()
 			if len(self.mediaList) == 0:
 				self.session.openWithCallback(self.close, MessageBox, _("No items matching your search criteria were found"), MessageBox.TYPE_ERROR, timeout=5, simple=True)
@@ -1242,9 +1242,9 @@ class OpenUg(Screen):
 			start = self.page * self.MAX_PIC_PAGE
 			end = (self.page * self.MAX_PIC_PAGE) + self.MAX_PIC_PAGE
 			count = 0
-			for x in self.mediaList:
+			for idx in self.mediaList:
 				if count >= start and count < end:
-					if self.getThumbnailName(x) == picture_id:
+					if self.getThumbnailName(idx) == picture_id:
 						self.picloads[picture_id] = ePicLoad()
 						self.picloads[picture_id].PictureData.get().append(boundFunction(self.finish_decode, picture_id))
 						self.picloads[picture_id].setPara((150, 150, sc[0], sc[1], False, 1, "#00000000"))
@@ -1404,7 +1404,7 @@ class OpenUg(Screen):
 				json_data = loads(data)
 				url_play = json_data['url']
 				if url_play != '':
-					myreference = eServiceReference(4097, 0, url)
+					myreference = eServiceReference(4097, 0, url_play)
 					myreference.setName(self.mediaList[self["list"].getSelectionIndex()][self.UG_PROGNAME])
 					self.session.open(UGMediaPlayer, myreference, False)
 

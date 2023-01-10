@@ -197,7 +197,10 @@ AM_CONDITIONAL(S7400S, test `echo "$BOXTYPE"` == "7400s")
 AM_CONDITIONAL(SF8008, test "$BOXTYPE" == "sf8008")
 AM_CONDITIONAL(SF8008M, test "$BOXTYPE" == "sf8008m")
 AM_CONDITIONAL(SF8008OPT, test "$BOXTYPE" == "sf8008opt")
+AM_CONDITIONAL(SFX6008, test "$BOXTYPE" == "sfx6008")
 AM_CONDITIONAL(SX988, test "$BOXTYPE" == "sx988")
+AM_CONDITIONAL(SX88V2, test "$BOXTYPE" == "sx88v2")
+AM_CONDITIONAL(IP8, test "$BOXTYPE" == "ip8")
 AM_CONDITIONAL(OG2OTT4K, test "$BOXTYPE" == "og2ott4k")
 AM_CONDITIONAL(S8100S, test `echo "$BOXTYPE"` == "8100s")
 AM_CONDITIONAL(SF5008, test `echo "$BOXTYPE"` == "sf5008")
@@ -222,6 +225,7 @@ AM_CONDITIONAL(V8PLUS, test "$BOXTYPE" == "v8plus")
 AM_CONDITIONAL(VIPER4K, test "$BOXTYPE" == "viper4k")
 AM_CONDITIONAL(MULTIBOX, test "$BOXTYPE" == multibox)
 AM_CONDITIONAL(MULTIBOXSE, test "$BOXTYPE" == multiboxse)
+AM_CONDITIONAL(MULTIBOXPRO, test "$BOXTYPE" == multiboxpro)
 AM_CONDITIONAL(XC7362, test "$BOXTYPE" == xc7362)
 AM_CONDITIONAL(XC7358, test "$BOXTYPE" == xc7358)
 AM_CONDITIONAL(XC7358CI, test "$BOXTYPE" == xc7358ci)
@@ -233,7 +237,7 @@ fi
 AM_CONDITIONAL(HAVE_TEMPFANCONTROL, test "$BOXTYPE" == dm8000 -o "$BOXTYPE" == dm800se -o "$BOXTYPE" == dm800sev2 -o "$BOXTYPE" == dm500hd -o "$BOXTYPE" == vuuno -o "$BOXTYPE" == vuultimo -o "$BOXTYPE" == vusolo2 -o "$BOXTYPE" == vuduo2 -o "$BOXTYPE" == dags1 -o "$BOXTYPE" == dags2 -o "$BOXTYPE" == dags3 -o "$BOXTYPE" == dags4 -o "$BOXTYPE" == dags5 -o "$BOXTYPE" == dags7335 -o "$BOXTYPE" == dags7362 -o "$BOXTYPE" == dags73625 -o "$BOXTYPE" == dags7356 -o "$BOXTYPE" == dags7252 -o "$BOXTYPE" == triplex)
 
 AM_CONDITIONAL(HAVE_ARMV7A, test "$BOXTYPE" == cube)
-AM_CONDITIONAL(HAVE_ARMV7AHF, test "$BOXTYPE" == hd51 -o "$BOXTYPE" == 8100s -o "$BOXTYPE" == vs1500 -o "$BOXTYPE" == vusolo4k -o "$BOXTYPE" == vuuno4k -o "$BOXTYPE" == vuuno4kse -o "$BOXTYPE" == vuzero4k -o "$BOXTYPE" == vuultimo4k -o "$BOXTYPE" == vuduo4k -o "$BOXTYPE" == vuduo4kse -o "$BOXTYPE" == dm900 -o "$BOXTYPE" == dm920 -o "$BOXTYPE" == sf4008 -o "$BOXTYPE" == dags7252 -o "$BOXTYPE" == dags72604 -o "$BOXTYPE" == gb7252 -o "$BOXTYPE" == xc7439 -o "$BOXTYPE" == h7 -o "$BOXTYPE" == h9 -o "$BOXTYPE" == h9combo -o "$BOXTYPE" == h10 -o "$BOXTYPE" == h11 -o "$BOXTYPE" == sf5008 -o "$BOXTYPE" == et1x000 -o "$BOXTYPE" == et13000 -o "$BOXTYPE" == cc1 -o "$BOXTYPE" == sf8008 -o "$BOXTYPE" == sf8008m -o "$BOXTYPE" == sf8008opt -o "$BOXTYPE" == sx988 -o "$BOXTYPE" == gbmv200 -o "$BOXTYPE" == viper4k -o "$BOXTYPE" == hd60 -o "$BOXTYPE" == hd61 -o "$BOXTYPE" == hd66se -o "$BOXTYPE" == i55plus -o "$BOXTYPE" == ustym4kpro -o "$BOXTYPE" == ustym4kottpremium -o "$BOXTYPE" == multiboxse -o "$BOXTYPE" == multibox -o "$BOXTYPE" == osmio4k -o "$BOXTYPE" == osmio4kplus -o "$BOXTYPE" == osmini4k -o "$BOXTYPE" == pulse4k -o "$BOXTYPE" == pulse4kmini)
+AM_CONDITIONAL(HAVE_ARMV7AHF, test "$BOXTYPE" == hd51 -o "$BOXTYPE" == 8100s -o "$BOXTYPE" == vs1500 -o "$BOXTYPE" == vusolo4k -o "$BOXTYPE" == vuuno4k -o "$BOXTYPE" == vuuno4kse -o "$BOXTYPE" == vuzero4k -o "$BOXTYPE" == vuultimo4k -o "$BOXTYPE" == vuduo4k -o "$BOXTYPE" == vuduo4kse -o "$BOXTYPE" == dm900 -o "$BOXTYPE" == dm920 -o "$BOXTYPE" == sf4008 -o "$BOXTYPE" == dags7252 -o "$BOXTYPE" == dags72604 -o "$BOXTYPE" == gb7252 -o "$BOXTYPE" == xc7439 -o "$BOXTYPE" == h7 -o "$BOXTYPE" == h9 -o "$BOXTYPE" == h9combo -o "$BOXTYPE" == h10 -o "$BOXTYPE" == h11 -o "$BOXTYPE" == sf5008 -o "$BOXTYPE" == et1x000 -o "$BOXTYPE" == et13000 -o "$BOXTYPE" == cc1 -o "$BOXTYPE" == sf8008 -o "$BOXTYPE" == sf8008m -o "$BOXTYPE" == sf8008opt -o "$BOXTYPE" == sx988 -o "$BOXTYPE" == ip8 -o "$BOXTYPE" == gbmv200 -o "$BOXTYPE" == viper4k -o "$BOXTYPE" == hd60 -o "$BOXTYPE" == hd61 -o "$BOXTYPE" == hd66se -o "$BOXTYPE" == i55plus -o "$BOXTYPE" == ustym4kpro -o "$BOXTYPE" == ustym4kottpremium -o "$BOXTYPE" == multiboxpro -o "$BOXTYPE" == multiboxse -o "$BOXTYPE" == multibox -o "$BOXTYPE" == osmio4k -o "$BOXTYPE" == osmio4kplus -o "$BOXTYPE" == osmini4k -o "$BOXTYPE" == pulse4k -o "$BOXTYPE" == pulse4kmini -o "$BOXTYPE" == sfx6008 -o "$BOXTYPE" == sx88v2)
 AM_CONDITIONAL(HAVE_CORTEXA9HF, test "$BOXTYPE" == wetekplay)
 AM_CONDITIONAL(HAVE_AARCH64, test "$BOXTYPE" == wetekplay2 -o "$BOXTYPE" == alien5 )
 
@@ -313,11 +317,6 @@ DLNAServer/Makefile
 DLNAServer/src/Makefile
 DLNAServer/po/Makefile
 DLNAServer/meta/Makefile
-
-DMBlindscan/Makefile
-DMBlindscan/src/Makefile
-DMBlindscan/meta/Makefile
-DMBlindscan/po/Makefile
 
 EPGTranslator/Makefile
 EPGTranslator/meta/Makefile
@@ -606,27 +605,40 @@ TVSpielfilm/Makefile
 TVSpielfilm/meta/Makefile
 TVSpielfilm/src/Makefile
 TVSpielfilm/src/db/Makefile
-TVSpielfilm/src/pic/Makefile
-TVSpielfilm/src/pic/buttons/Makefile
-TVSpielfilm/src/pic/icons/Makefile
-TVSpielfilm/src/pic/picons/Makefile
+TVSpielfilm/src/font/Makefile
+TVSpielfilm/src/picons/Makefile
+TVSpielfilm/src/pics/Makefile
+TVSpielfilm/src/pics/FHD/Makefile
+TVSpielfilm/src/pics/FHD/buttons/Makefile
+TVSpielfilm/src/pics/FHD/icons/Makefile
+TVSpielfilm/src/pics/FHD/logos/Makefile
+TVSpielfilm/src/pics/FHD/selectors/Makefile
+TVSpielfilm/src/pics/HD/Makefile
+TVSpielfilm/src/pics/HD/buttons/Makefile
+TVSpielfilm/src/pics/HD/icons/Makefile
+TVSpielfilm/src/pics/HD/logos/Makefile
+TVSpielfilm/src/pics/HD/selectors/Makefile
 
 Chefkoch/Makefile
 Chefkoch/meta/Makefile
 Chefkoch/src/Makefile
 Chefkoch/src/db/Makefile
-Chefkoch/src/font/Makefile
 Chefkoch/src/pic/Makefile
-Chefkoch/src/pic/buttons/Makefile
-Chefkoch/src/pic/starbars/Makefile
-Chefkoch/src/pic/setup/Makefile
-Chefkoch/src/pic/slider/Makefile
+Chefkoch/src/pic/FHD/Makefile
+Chefkoch/src/pic/HD/Makefile
 
 PiconManager/Makefile
 PiconManager/meta/Makefile
 PiconManager/src/Makefile
 PiconManager/src/pic/Makefile
 PiconManager/po/Makefile
+
+autoBLchanger/Makefile
+autoBLchanger/meta/Makefile
+autoBLchanger/po/Makefile
+autoBLchanger/src/Makefile
+autoBLchanger/src/images/Makefile
+autoBLchanger/src/logos/Makefile
 
 ])
 AC_OUTPUT

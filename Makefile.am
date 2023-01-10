@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = ABMCustomMixImporter AboutBoxBranding Blindscan BTDevicesManager ChannelsImporter DLNABrowser DLNAServer EPGTranslator Fempa LCD4linux OnDemand RemoteChannelStreamConverter SatipClient StreamTV tmdb TunerServer xmlUpdate 3GModemManager Chefkoch PiconsUpdater
+SUBDIRS = ABMCustomMixImporter AboutBoxBranding autoBLchanger Blindscan BTDevicesManager ChannelsImporter DLNABrowser DLNAServer EPGTranslator Fempa LCD4linux OnDemand RemoteChannelStreamConverter SatipClient StreamTV tmdb TunerServer xmlUpdate 3GModemManager Chefkoch PiconsUpdater TVSpielfilm
 
 if MIPSEL
 SUBDIRS += WirelessAccessPoint
@@ -24,10 +24,6 @@ endif
 
 if DAGSMV200
 SUBDIRS += MultiTransCodingSetup
-endif
-
-if DREAMBOX
-SUBDIRS +=  DMBlindscan
 endif
 
 if DINOBOT
@@ -218,7 +214,19 @@ if SF8008OPT
 SUBDIRS += MultiTransCodingSetup VPLEDControl
 endif
 
+if SX88V2
+SUBDIRS += MultiTransCodingSetup VPLEDControl
+endif
+
+if SFX6008
+SUBDIRS += VPLEDControl
+endif
+
 if SX988
+SUBDIRS += MultiTransCodingSetup
+endif
+
+if IP8
 SUBDIRS += MultiTransCodingSetup
 endif
 
@@ -378,6 +386,10 @@ if MULTIBOXSE
 SUBDIRS += MultiTransCodingSetup
 endif
 
+if MULTIBOXPRO
+SUBDIRS += MultiTransCodingSetup
+endif
+
 if GIGABLUE
 SUBDIRS += GigaBlueVFDControl AudioEffect GigaBlueRemote
 endif
@@ -463,5 +475,5 @@ SUBDIRS += GigaBlueChromium GigaBlueBluetoothSetup
 endif
 
 if HAVE_PYTHON3
-SUBDIRS += TVSpielfilm PiconManager
+SUBDIRS += PiconManager
 endif

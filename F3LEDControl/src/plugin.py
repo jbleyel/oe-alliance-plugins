@@ -6,18 +6,15 @@ from Plugins.Plugin import PluginDescriptor
 from Components.Console import Console
 from Components.Button import Button
 from Components.ActionMap import ActionMap
-from Components.ConfigList import ConfigList
 from Components.config import config, configfile, ConfigSubsection, getConfigListEntry, ConfigSelection
 from Components.ConfigList import ConfigListScreen
 from enigma import iPlayableService, eServiceCenter, eTimer, eActionMap
 from Components.ServiceEventTracker import ServiceEventTracker
-from Components.ServiceList import ServiceList
 from Screens.InfoBar import InfoBar
 import Screens.Standby
 from time import localtime, time
-from Tools.Directories import fileExists
 
-from boxbranding import getImageDistro, getBoxType
+from boxbranding import getImageDistro
 
 import Screens.Standby
 
@@ -279,7 +276,7 @@ def main(menuid):
 			if menuid == "display":
 				return [(_("LED Display Setup"), startSEG, "VFD_INI", None)]
 			else:
-				return[]
+				return []
 		else:
 			if menuid != "system":
 				return []
@@ -321,4 +318,4 @@ def sessionstart(reason, **kwargs):
 
 def Plugins(**kwargs):
 	return [PluginDescriptor(where=[PluginDescriptor.WHERE_AUTOSTART, PluginDescriptor.WHERE_SESSIONSTART], fnc=sessionstart),
-		PluginDescriptor(name="LED Display Setup", description="Change LED display settings", where=PluginDescriptor.WHERE_MENU, fnc=main)]
+		PluginDescriptor(name="LED Display Setup", description=_("Change LED display settings"), where=PluginDescriptor.WHERE_MENU, fnc=main)]

@@ -15,14 +15,22 @@
 #  Thanks to vuplus-support.org for the webspace
 #######################################################################
 
+from uuid import uuid4
+from shutil import rmtree
+from random import choice
+from datetime import date
+from re import S, I, search
+from skin import parameters
+from requests import get, exceptions
+from os import mkdir, makedirs, statvfs, remove
+from os.path import exists, isdir, basename, join, splitext
+from six import ensure_binary, ensure_str
 from Screens.ChannelSelection import SimpleChannelSelection, service_types_tv, service_types_radio
 from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Screens.VirtualKeyBoard import VirtualKeyBoard
 from Screens.HelpMenu import HelpableScreen
-from enigma import eServiceCenter, eServiceReference, gFont, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_HALIGN_CENTER, RT_VALIGN_CENTER
 from ServiceReference import ServiceReference
-from Tools.LoadPixmap import LoadPixmap
 from Plugins.Plugin import PluginDescriptor
 from Components.Label import Label
 from Components.ActionMap import ActionMap, HelpableActionMap
@@ -34,27 +42,17 @@ from Components.FileList import FileList
 from Components.MenuList import MenuList
 from Components.Pixmap import Pixmap
 from twisted.internet import defer
-from twisted.web.client import downloadPage, getPage, error
-import re
-import os
-import shutil
-import random
-import uuid
-import skin
-import datetime
-import six
+from twisted.internet.reactor import callInThread
+from six.moves.urllib.parse import quote
+from enigma import eServiceCenter, eServiceReference, gFont, eListboxPythonMultiContent, RT_HALIGN_LEFT, RT_HALIGN_RIGHT, RT_HALIGN_CENTER, RT_VALIGN_CENTER
+
+from .piconnames import reducedName, getInteroperableNames  #check for by-name-picons that dont fit with VTi Syntax (Picon Buddy Mode)
 from . import _
-
-if six.PY2:
-	from urllib import quote
-else:
-	from urllib.parse import quote
-
 
 pname = _("PiconManager (mod)")
 pdesc = _("Manage your Picons")
-pversion = "2.4-r0"
-pdate = "20161103"
+pversion = "2.5-r2"
+pdate = "20220816"
 
 picon_tmp_dir = "/tmp/piconmanager/"
 picon_debug_file = "/tmp/piconmanager_error"
@@ -76,24 +74,24 @@ config.plugins.piconmanager.alter = ConfigInteger(default=365, limits=(0, 1000))
 
 
 def ListEntry(entry):
-	x, y, w, h = skin.parameters.get("PiconManagerList", (10, 0, 1280, 25))
+	x, y, w, h = parameters.get("PiconManagerList", (10, 0, 1280, 25))
 	return [entry, (eListboxPythonMultiContent.TYPE_TEXT, x, y, w, h, 0, RT_HALIGN_LEFT | RT_VALIGN_CENTER, entry[0])]
 
 
 def errorWrite(error):
 	if config.plugins.piconmanager.debug.value:
-		if not os.path.exists(picon_debug_file):
+		if not exists(picon_debug_file):
 			f = open(picon_debug_file, "w")
 		else:
 			f = open(picon_debug_file, "a")
-		f.write(error + "\n")
+		f.write("%s\n" % error)
 		f.close()
 
 
 def notfoundWrite(picon):
 	if config.plugins.piconmanager.debug.value:
 			f = open("/tmp/picon_dl_err", "a")
-			f.write(picon + "\n")
+			f.write("%s\n" % picon)
 			f.close()
 
 
@@ -239,7 +237,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 			"blue": (self.changePiconName, _("Create folder")),
 			}, -2)
 		self.channelMenuList = MenuList([], enableWrapAround=True, content=eListboxPythonMultiContent)
-		font, size = skin.parameters.get("PiconManagerListFont", ('Regular', 22))
+		font, size = parameters.get("PiconManagerListFont", ('Regular', 22))
 		self.channelMenuList.l.setFont(0, gFont(font, size))
 		self.channelMenuList.l.setItemHeight(25)
 		self.setTitle(pname + " " * 3 + _("V") + " %s" % pversion)
@@ -247,8 +245,8 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		self['list'].onSelectionChanged.append(self.showPic)
 		self.keyLocked = True
 		self.piconTempDir = picon_tmp_dir
-		if not os.path.exists(self.piconTempDir):
-			os.mkdir(self.piconTempDir)
+		if not exists(self.piconTempDir):
+			mkdir(self.piconTempDir)
 		self.onLayoutFinish.append(self.getPiconList)
 
 	def settings(self):
@@ -278,8 +276,8 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		config.plugins.piconmanager.spicon.save()
 		self['spicon'].setText(service_name)
 		try:
-			shutil.rmtree(self.piconTempDir)
-			os.mkdir(self.piconTempDir)
+			rmtree(self.piconTempDir)
+			mkdir(self.piconTempDir)
 		except OSError:
 			pass
 		self.getPiconList()
@@ -365,11 +363,11 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		self.makeList(config.plugins.piconmanager.creator.value, config.plugins.piconmanager.size.value, config.plugins.piconmanager.bit.value, config.plugins.piconmanager.server.value, True, False, alter)
 
 	def getFreeSpace(self):
-		if os.path.isdir(self.picondir):
+		if isdir(self.picondir):
 			which = "MB"
 			free = 0
-			statvfs = os.statvfs(self.picondir)
-			free = (statvfs.f_frsize * statvfs.f_bfree) / 1024 / 1024
+			currstatvfs = statvfs(self.picondir)
+			free = (currstatvfs.f_frsize * currstatvfs.f_bfree) / 1024 / 1024
 			if free > 1024:
 				free = int(free / 1024.)
 				which = "GB"
@@ -381,25 +379,22 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		self["picon"].hide()
 		if len(self.piconlist) and self['list'].getCurrent() and len(self['list'].getCurrent()[0]) >= 3:
 			self.auswahl = self['list'].getCurrent()[0][2]
-			picon_name = os.path.basename(self.auswahl)
+			picon_name = basename(self.auswahl)
 			if config.plugins.piconmanager.spicon.value != "":
 				if not "by name" in self['list'].getCurrent()[0][0].lower():
 					picon_sname = txt = config.plugins.piconmanager.spicon.value.split('|')[0]
 				else:
 					picon_sname = txt = config.plugins.piconmanager.spicon.value.split('|')[1].replace(" ", "%20") + ".png"
 				self.auswahl = self.auswahl.replace(picon_name, picon_sname)
-			self.downloadPiconPath = os.path.join(self.piconTempDir, self['list'].getCurrent()[0][4] + ".png")
-			if not os.path.exists(self.downloadPiconPath):
-				try: # ignore codings like '\xc3\x90'
-					downloadPage(six.ensure_binary(self.auswahl), self.downloadPiconPath).addCallback(self.showPiconFile, self.downloadPiconPath).addErrback(self.dataError)
-				except ValueError:
-					pass
+			self.downloadPiconPath = join(self.piconTempDir, self['list'].getCurrent()[0][4] + ".png")
+			if not exists(self.downloadPiconPath):
+				callInThread(self.threadDownloadPage, self.auswahl, self.downloadPiconPath, self.showPiconFile, self.dataError)
 			else:
-				self.showPiconFile(None, self.downloadPiconPath)
+				self.showPiconFile(self.downloadPiconPath, None)
 
 	def getPiconList(self):
 		print("[PiconManager] started ...")
-		self['piconcount'].setText(_("Channels:") + " %s" % str(self.countchlist))
+		self['piconcount'].setText(_("Channels:") + " %s" % self.countchlist)
 		self['selected'].setText(_(str(config.plugins.piconmanager.selected.value).replace("_", ", ").replace("+", " ").replace("-", " ")))
 		if config.plugins.piconmanager.spicon.value != "":
 			txt = config.plugins.piconmanager.spicon.value.split('|')
@@ -410,14 +405,22 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		else:
 			txt = ""
 		self['spicon'].setText(txt)
-		url = self.server_url + picon_info_file
-		url = six.ensure_binary(url)
+		url = "%s%s" % (self.server_url, picon_info_file)
 		print("[PiconManager] Server: %s" % self.server_url)
 		if config.plugins.piconmanager.selected.value == _("All"):
 			config.plugins.piconmanager.selected.setValue("All")
 			config.plugins.piconmanager.selected.save()
 		self.channelMenuList.setList(list(map(ListEntry, [(_("Loading, please wait..."),)])))
-		getPage(url, method=b'GET').addCallback(self.parsePiconList).addErrback(self.dataError2)
+		callInThread(self.threadGetPage, url, self.parsePiconList, self.dataError2)
+
+	def threadGetPage(self, link, success, fail):
+		try:
+			response = get(link)
+			response.raise_for_status()
+		except exceptions.RequestException as error:
+			fail(error)
+		else:
+			success(response.content)
 
 	def parsePiconList(self, data):
 		print("[PiconManager] parsing ...")
@@ -426,15 +429,15 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		self.creator_list = ["All"]
 		self.piconlist = []
 		self.art_list = ["All"]
-		data = six.ensure_str(data).replace("\xc2\x86", "").replace("\xc2\x87", "")
+		data = ensure_str(data).replace("\xc2\x86", "").replace("\xc2\x87", "")
 		picon_data = data.split("\n")
 		if picon_data:
 			for picon_info in picon_data:
 				if len(picon_info) and not picon_info.startswith('<meta'):
 					info_list = picon_info.split(';')
 					if len(info_list) >= 9:
-						dirUrl = os.path.join(self.server_url, info_list[0]).replace(" ", "%20")
-						picUrl = os.path.join(self.server_url, info_list[0], info_list[1]).replace(" ", "%20")
+						dirUrl = join(self.server_url, info_list[0]).replace(" ", "%20")
+						picUrl = join(self.server_url, info_list[0], info_list[1]).replace(" ", "%20")
 						cur_dir = info_list[0]
 						p_date = info_list[2]
 						p_name = info_list[3]
@@ -451,7 +454,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 							self.creator_list.append(p_creator)
 						if p_pos not in self.art_list:
 							self.art_list.append(p_pos)
-						p_identifier = str(uuid.uuid4())
+						p_identifier = str(uuid4())
 						p_name = "%s | %s - %s | %s | %s | %s | %s" % (p_pos, p_creator, p_name, p_size, p_bit, p_date, p_uploader)
 						self.piconlist.append((p_name, dirUrl, picUrl, (p_creator, p_size, p_bit, p_pos), p_identifier, cur_dir))
 			if config.plugins.piconmanager.selected.value not in self.art_list:
@@ -509,10 +512,10 @@ class PiconManagerScreen(Screen, HelpableScreen):
 				art = config.plugins.piconmanager.selected.value
 				for x in self.piconlist:
 					if alter:
-						present = datetime.date.today()
+						present = date.today()
 						pdatestr = str(x[0]).split(" | ")[4]
 						pdatestr = pdatestr.split(".")
-						pdate = datetime.date(int(pdatestr[2]), int(pdatestr[1]), int(pdatestr[0]))
+						pdate = date(int(pdatestr[2]), int(pdatestr[1]), int(pdatestr[0]))
 						diff = present - pdate
 						if int(diff.days) > alter:
 							continue
@@ -531,27 +534,37 @@ class PiconManagerScreen(Screen, HelpableScreen):
 				if len(self['list'].getCurrent()[0]) >= 6:
 					self.auswahl = self['list'].getCurrent()[0][4]
 					self.cur_selected_dir = self['list'].getCurrent()[0][5]
-					self.picon_list_file = self.piconTempDir + self.auswahl + "_list"
-					if os.path.exists(self.picon_list_file):
+					self.picon_list_file = "%s%s_list" % (self.piconTempDir, self.auswahl)
+					if exists(self.picon_list_file):
 						self.getPiconFiles()
 					else:
-						url = self.server_url + self.cur_selected_dir + "/" + picon_list_file
-						url = six.ensure_binary(url)
-						downloadPage(url, self.picon_list_file).addCallback(self.getPiconFiles).addErrback(self.dataError)
+						url = "%s%s/%s" % (self.server_url, self.cur_selected_dir, picon_list_file)
+						callInThread(self.threadDownloadPage, url, self.picon_list_file, self.getPiconFiles, self.dataError)
 
 	def getPiconFiles(self, data=None):
-		if os.path.exists(self.picon_list_file):
+		if exists(self.picon_list_file):
 			if self.prev_sel != self.picon_list_file:
 				self.prev_sel = self.picon_list_file
 				with open(self.picon_list_file) as f:
 					self.picon_files = f.readlines()
-			self.picon_name = random.choice(self.picon_files)
-			downloadPiconUrl = self.server_url + self.cur_selected_dir + "/" + self.picon_name
-			downloadPiconUrl = downloadPiconUrl.replace(" ", "%20")
-			self.downloadPiconPath = self.piconTempDir + self.auswahl
+			self.picon_name = choice(self.picon_files)
+			downloadPiconUrl = "%s%s/%s" % (self.server_url, self.cur_selected_dir, self.picon_name)
+			self.downloadPiconPath = "%s%s.png" % (self.piconTempDir, self.auswahl)
 			self.keyLocked = False
-			downloadPiconUrl = six.ensure_binary(downloadPiconUrl)
-			downloadPage(downloadPiconUrl, self.downloadPiconPath).addCallback(self.showPiconFile, self.downloadPiconPath).addErrback(self.dataError)
+			downloadPiconUrl = downloadPiconUrl
+			callInThread(self.threadDownloadPage, downloadPiconUrl, self.downloadPiconPath, self.showPiconFile, self.dataError)
+
+	def threadDownloadPage(self, link, file, success, fail=None):
+		link = ensure_binary(link.encode('ascii', 'xmlcharrefreplace').decode().replace(' ', '%20').replace('\n', ''))
+		try:
+			response = get(link)
+			response.raise_for_status()
+			with open(file, "wb") as f:
+				f.write(response.content)
+			success(file)
+		except exceptions.RequestException as error:
+			if fail is not None:
+				fail(error)
 
 	def keyCancel(self):
 		config.plugins.piconmanager.savetopath.value = self.picondir
@@ -560,7 +573,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		config.plugins.piconmanager.piconname.save()
 		self.channelMenuList.setList([])
 		try:
-			shutil.rmtree(self.piconTempDir)
+			rmtree(self.piconTempDir)
 		except OSError:
 			pass
 		self.close()
@@ -575,11 +588,11 @@ class PiconManagerScreen(Screen, HelpableScreen):
 			self['piconpath2'].setText(self.piconfolder)
 
 	def changeDrive(self):
-		if re.search("/usr/share/enigma2/", self.piconfolder, re.S | re.I):
+		if search("/usr/share/enigma2/", self.piconfolder, S | I):
 			self.picondir = "/media/usb/"
-		elif re.search("/media/usb/", self.piconfolder, re.S | re.I):
+		elif search("/media/usb/", self.piconfolder, S | I):
 			self.picondir = "/media/hdd/"
-		elif re.search("/media/hdd/", self.piconfolder, re.S | re.I):
+		elif search("/media/hdd/", self.piconfolder, S | I):
 			self.picondir = "/usr/share/enigma2/"
 		self.piconfolder = "%s%s/" % (self.picondir, self.piconname)
 		self['piconpath2'].setText(self.piconfolder)
@@ -595,19 +608,71 @@ class PiconManagerScreen(Screen, HelpableScreen):
 			self.piconfolder = "%s%s/" % (self.picondir, self.piconname)
 			self['piconpath2'].setText(self.piconfolder)
 			print("[PiconManager] set picon path to: %s" % self.piconfolder)
+	##################################### OH #############################################
+
+	def url2Str(self, url):
+		try:
+			from urllib.request import Request, urlopen
+			header = {'User-Agent': 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.2.6) Gecko/20100627 Firefox/3.6.6',
+					'Accept-Charset': 'utf-8;q=0.7,*;q=0.7', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'}
+			searchrequest = Request(url, None, header)
+			return urlopen(searchrequest).read()
+		except:
+			return ''
+
+	def prepByNameList(self):  #load picon list, then create reducedNames (for flexible comparing with channel names)
+		self.nameList = []
+		self.reducedList = []
+		try:
+			if not "by name" in self['list'].getCurrent()[0][0].lower():
+				return 1
+			self.auswahl = self['list'].getCurrent()[0][4]
+			self.cur_selected_dir = self['list'].getCurrent()[0][5]
+			self.picon_list_file = self.piconTempDir + self.auswahl + "_list"
+			url = self.server_url + self.cur_selected_dir + "/" + picon_list_file
+			for x in self.url2Str(url).split('\n'):
+				self.nameList.append(x[:-4])
+				self.reducedList.append(reducedName(x[:-4]))
+		except:
+			pass
+
+	def comparableChannelName(self, channelName):  # check picon list for comparable channelname
+		try:
+			if channelName in self.nameList:
+				return channel
+			r = reducedName(channelName)
+			if r in self.reducedList:
+				return self.nameList[self.reducedList.index(r)]
+		except:
+			pass
+		return channelName
+
+	def primaryByName(self, channelName):  # if a picon-by-name already exists, use its name
+		try:
+			if exists(self.piconfolder + channelName + '.png'):
+				return channelName
+			for c in getInteroperableNames(channelName):
+				if exists(self.piconfolder + c + '.png'):
+					return c
+		except:
+			pass
+		return channelName
+
+	##################################### /OH #############################################
 
 	def downloadPicons(self):
 		no_drive = False
 		if self['list'].getCurrent():
-			if not os.path.isdir(self.picondir):
+			if not isdir(self.picondir):
 				txt = "%s\n" % self.picondir + _("is not installed.")
 				self.session.open(MessageBox, txt, MessageBox.TYPE_INFO, timeout=3)
 				no_drive = True
 
+		self.prepByNameList()  #### OH #####
 		if not no_drive:
-			if not os.path.isdir(self.piconfolder):
+			if not isdir(self.piconfolder):
 				print("[PiconManager] create folder %s" % self.piconfolder)
-				os.makedirs(self.piconfolder)
+				makedirs(self.piconfolder)
 			self['piconpath2'].setText(self.piconfolder)
 			urls = []
 			if int(self.countchlist) > 0 and not self.keyLocked and self['list'].getCurrent():
@@ -620,15 +685,20 @@ class PiconManagerScreen(Screen, HelpableScreen):
 					for channel in self.chlist:
 						downloadPiconUrl = None
 						if "by name" in self['list'].getCurrent()[0][0].lower():
-							downloadPiconUrl = quote(channel[1] + ".png")
-							downloadPiconPath = self.piconfolder + channel[1] + ".png"
+							#downloadPiconUrl = quote(channel[1] + ".png")     #### OH #####
+							#downloadPiconPath = self.piconfolder + channel[1] + ".png"     #### OH #####
+							downloadPiconUrl = quote(self.comparableChannelName(channel[1]) + ".png")  #### OH #####
+							downloadPiconPath = "%s.png" % (self.piconfolder + self.primaryByName(channel[1]))  #### OH #####
 						else:
-							downloadPiconUrl = channel[0]
-							downloadPiconUrl = str(downloadPiconUrl).split("http")[0]
-							downloadPiconUrl = str(downloadPiconUrl).split("rtmp")[0]
+							downloadPiconUrl = str(channel[0])
+							downloadPiconUrl = downloadPiconUrl.split("http")[0]
+							downloadPiconUrl = downloadPiconUrl.split("rtmp")[0]
+							downloadPiconUrl = "%s:" % downloadPiconUrl.split("::")[0].rstrip(':')  #### OH #####
+							if downloadPiconUrl.startswith('4097:'):
+								downloadPiconUrl = '1%s' % downloadPiconUrl[4:]  #### OH #####
 							downloadPiconUrl = downloadPiconUrl.replace(':', '_')
-							downloadPiconUrl = downloadPiconUrl[:-1] + ".png"
-							downloadPiconPath = self.piconfolder + downloadPiconUrl#.replace("%20"," ")
+							downloadPiconUrl = "%s.png" % downloadPiconUrl[:-1]
+							downloadPiconPath = self.piconfolder + downloadPiconUrl  # .replace("%20"," ")
 						if downloadPiconUrl:
 							downloadPiconUrl = self.auswahl + downloadPiconUrl
 							urls.append((downloadPiconUrl, downloadPiconPath))
@@ -641,9 +711,9 @@ class PiconManagerScreen(Screen, HelpableScreen):
 				finished = defer.DeferredList(downloads).addErrback(self.dataError)
 
 	def download(self, downloadPiconUrl, downloadPiconPath):
-		downloadPiconUrl = six.ensure_binary(downloadPiconUrl)
-		self.aktdl_pico = os.path.splitext(os.path.basename(downloadPiconPath))[0]
-		return downloadPage(downloadPiconUrl, downloadPiconPath)
+		self.aktdl_pico = splitext(basename(downloadPiconPath))[0]
+#		return downloadPage(downloadPiconUrl, downloadPiconPath)
+		return callInThread(self.threadDownloadPage, downloadPiconUrl, downloadPiconPath, None, None)
 
 	def downloadError(self, error):
 		if self.aktdl_pico:
@@ -653,7 +723,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 						self.aktdl_pico = self.aktdl_pico + " = " + channel[1] + " / " + channel[0]
 						notfoundWrite(self.aktdl_pico)
 		self.counterrors += 1
-		self['piconerror'].setText(_("Not found Picons:") + " %s" % str(self.counterrors))
+		self['piconerror'].setText(_("Not found Picons:") + " %s" % self.counterrors)
 		total = self.countload + self.counterrors
 		self["piconslider"].setValue(total)
 		if self.countchlist == total:
@@ -661,7 +731,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 
 	def downloadDone(self, data):
 		self.countload += 1
-		self['picondownload'].setText(_("Loaded Picons:") + " %s" % str(self.countload))
+		self['picondownload'].setText(_("Loaded Picons:") + " %s" % self.countload)
 		total = self.countload + self.counterrors
 		self["piconslider"].setValue(total)
 		if self.countchlist == total:
@@ -671,7 +741,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 	def checkDouble(self, num=0):
 		if num == 5:
 			try:
-				os.remove("/tmp/piconmanager_err")
+				remove("/tmp/piconmanager_err")
 			except:
 				pass
 			lena = 1
@@ -684,17 +754,18 @@ class PiconManagerScreen(Screen, HelpableScreen):
 				downloadPiconUrl = self.piconfolder + downloadPiconUrl[:-1] + ".png"
 				d2 = self.piconfolder + channel[1] + ".png"
 				try:
-					if os.path.exists(downloadPiconUrl) and os.path.exists(d2):
+					if exists(downloadPiconUrl) and exists(d2):
 						if "by name" in self['list'].getCurrent()[0][0].lower():
-							os.remove(downloadPiconUrl)
+							remove(downloadPiconUrl)
 						else:
-							os.remove(d2)
+							remove(d2)
 
 				except:
 					pass
 				if lena < len(self.chlist):
 					lena += 1
 				else:
+					self['piconerror'].setText(_("Not found Picons:") + " %s" % self.counterrors)
 					self['piconpath2'].setText(_("Download finished !"))
 
 	def dataError2(self, error=None):
@@ -713,7 +784,7 @@ class PiconManagerScreen(Screen, HelpableScreen):
 				self.getPiconList()
 
 	def dataError(self, error):
-		print("[PiconManager] ERROR" % str(error))
+		print("[PiconManager] ERROR:%s" % error)
 		try:
 			if "500 Internal Server Error" in error:
 				self.session.open(MessageBox, _("Server temporarily unavailable"), MessageBox.TYPE_ERROR, timeout=10)
@@ -722,8 +793,8 @@ class PiconManagerScreen(Screen, HelpableScreen):
 		errorWrite(str(len(self.auswahl)) + " - " + str(self.auswahl) + "\n" + str(error) + "\n")
 		self["picon"].hide()
 
-	def showPiconFile(self, data, picPath):
-		if os.path.exists(picPath):
+	def showPiconFile(self, picPath, data=None):
+		if exists(picPath):
 			self["picon"].show()
 			if picPath is not None:
 				self["picon"].instance.setPixmapFromFile(picPath)
@@ -744,7 +815,7 @@ class PiconManagerFolderScreen(Screen):
 	def __init__(self, session, initDir, plugin_path=None):
 		Screen.__init__(self, session)
 
-		if not os.path.isdir(initDir):
+		if not isdir(initDir):
 			initDir = "/usr/share/enigma2/"
 
 		self["folderlist"] = FileList(initDir, inhibitMounts=False, inhibitDirs=False, showMountpoints=False, showFiles=False)
