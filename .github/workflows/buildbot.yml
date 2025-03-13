@@ -24,5 +24,5 @@ jobs:
         run: |
           sudo apt-get -q update
           sudo apt-get install dos2unix
-          pip install --upgrade pip autopep8
+          pip install --upgrade pip autopep8 ruff
           ./CI/build.sh
