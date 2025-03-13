@@ -14,9 +14,7 @@ commit_files() {
   rm -rf *.pyo
   rm -rf *.mo
   git checkout master
-  ./CI/chmod.sh
-  ./CI/dos2unix.sh
-  ./CI/PEP8.sh
+  ./CI/ruff.sh
 }
 
 upload_files() {
@@ -26,4 +24,4 @@ upload_files() {
 
 setup_git
 commit_files
-upload_files
+# upload_files
